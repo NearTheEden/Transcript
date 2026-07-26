@@ -1,0 +1,8 @@
+node_modules/
+dist/
+release/
+resources/models/
+resources/ffmpeg/
+resources/whisper/
+*.log
+.DS_Store
