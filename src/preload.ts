@@ -4,14 +4,17 @@ contextBridge.exposeInMainWorld('transcripteurAPI', {
   selectFile: (): Promise<string | null> =>
     ipcRenderer.invoke('select-audio-file'),
 
-  listModels: (): Promise<{ filename: string; label: string }[]> =>
+  listModels: (): Promise<{ filename: string; label: string; source: 'builtin' | 'user'; path: string }[]> =>
     ipcRenderer.invoke('list-models'),
+
+  importModel: (): Promise<{ success: boolean; filename?: string; error?: string } | null> =>
+    ipcRenderer.invoke('import-model'),
 
   listEngines: (): Promise<{ id: 'cpu' | 'vulkan'; label: string; available: boolean }[]> =>
     ipcRenderer.invoke('list-engines'),
 
-  transcribe: (audioPath: string, prompt: string, modelFilename: string, engine: 'cpu' | 'vulkan') =>
-    ipcRenderer.invoke('transcribe', { audioPath, prompt, modelFilename, engine }),
+  transcribe: (audioPath: string, prompt: string, modelPath: string, engine: 'cpu' | 'vulkan') =>
+    ipcRenderer.invoke('transcribe', { audioPath, prompt, modelPath, engine }),
 
   saveText: (text: string): Promise<string | null> =>
     ipcRenderer.invoke('save-text', text),
@@ -23,6 +26,5 @@ contextBridge.exposeInMainWorld('transcripteurAPI', {
     ipcRenderer.on('transcription-progress', (_event, message) => callback(message));
   },
 
-  // Requis depuis Electron 32 pour récupérer le chemin d'un fichier drag-and-drop
   getPathForFile: (file: File): string => webUtils.getPathForFile(file),
 });

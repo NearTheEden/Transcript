@@ -15,6 +15,8 @@ const saveButton = document.getElementById('save-button') as HTMLButtonElement;
 const saveDocxButton = document.getElementById('save-docx-button') as HTMLButtonElement;
 const modelSelect = document.getElementById('model-select') as HTMLSelectElement;
 const engineSelect = document.getElementById('engine-select') as HTMLSelectElement;
+const importModelButton = document.getElementById('import-model-button') as HTMLButtonElement;
+const progressBar = document.getElementById('progress-bar') as HTMLDivElement;
 
 let selectedFilePath: string | null = null;
 
@@ -28,11 +30,10 @@ async function loadModels() {
   }
   for (const model of models) {
     const opt = document.createElement('option');
-    opt.value = model.filename;
+    opt.value = model.path;   // ← chemin complet au lieu de filename
     opt.textContent = model.label;
     modelSelect.appendChild(opt);
   }
-  // Sélectionner "medium" par défaut si présent, sinon le premier
   const mediumIdx = models.findIndex((m) => m.filename.includes('medium'));
   modelSelect.selectedIndex = mediumIdx >= 0 ? mediumIdx : 0;
 }
@@ -58,6 +59,24 @@ async function loadEngines() {
   engineSelect.selectedIndex = cpuIdx >= 0 ? cpuIdx : 0;
 }
 loadEngines();
+
+importModelButton.addEventListener('click', async () => {
+  importModelButton.disabled = true;
+  importModelButton.textContent = '⏳';
+  try {
+    const result = await window.transcripteurAPI.importModel();
+    if (result === null) return; // annulé
+    if (!result.success) {
+      alert(`❌ ${result.error}`);
+      return;
+    }
+    alert(`Modèle "${result.filename}" importé avec succès.`);
+    await loadModels(); // rafraîchir la liste
+  } finally {
+    importModelButton.disabled = false;
+    importModelButton.textContent = '➕';
+  }
+});
 
 function updateFileDisplay(filePath: string | null) {
   selectedFilePath = filePath;
@@ -94,14 +113,29 @@ dropZone.addEventListener('drop', (e) => {
 // Enregistrement du callback de progression (une seule fois)
 window.transcripteurAPI.onProgress((msg) => {
   progressMessage.textContent = msg;
+  // Extraire un pourcentage du message s'il existe
+  const match = msg.match(/(\d+)%/);
+  if (match) {
+    progressBar.classList.remove('indeterminate');
+    progressBar.style.width = `${match[1]}%`;
+  } else {
+    // Phase sans pourcentage (conversion ffmpeg, initialisation) → barre animée
+    progressBar.classList.add('indeterminate');
+  }
 });
 
 transcribeButton.addEventListener('click', async () => {
   if (!selectedFilePath) return;
-  if (!modelSelect.value) {
-    alert('Aucun modèle sélectionné. Vérifiez le dossier resources/models/.');
-    return;
-  }
+  if (!modelSelect.value) { alert('Aucun modèle sélectionné.'); return; }
+  if (!engineSelect.value) { alert('Aucun moteur sélectionné.'); return; }
+
+  progressArea.classList.remove('hidden');
+  resultArea.classList.add('hidden');
+  transcribeButton.disabled = true;
+  selectButton.disabled = true;
+  progressMessage.textContent = 'Préparation…';
+  progressBar.style.width = '0%';
+  progressBar.classList.add('indeterminate');
 
   progressArea.classList.remove('hidden');
   resultArea.classList.add('hidden');
@@ -120,10 +154,16 @@ transcribeButton.addEventListener('click', async () => {
   selectButton.disabled = false;
 
   if (result.success && result.text) {
-    progressArea.classList.add('hidden');
-    resultArea.classList.remove('hidden');
-    resultText.value = result.text;
+    progressBar.classList.remove('indeterminate');
+    progressBar.style.width = '100%';
+    setTimeout(() => {
+      progressArea.classList.add('hidden');
+      resultArea.classList.remove('hidden');
+      resultText.value = result.text!;
+    }, 400);
   } else {
+    progressBar.classList.remove('indeterminate');
+    progressBar.style.width = '0%';
     progressMessage.textContent = `❌ Erreur : ${result.error ?? 'inconnue'}`;
   }
 });

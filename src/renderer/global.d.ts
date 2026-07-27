@@ -4,12 +4,13 @@ declare global {
   interface Window {
     transcripteurAPI: {
       selectFile: () => Promise<string | null>;
-      listModels: () => Promise<{ filename: string; label: string }[]>;
+      listModels: () => Promise<{ filename: string; label: string; source: 'builtin' | 'user'; path: string }[]>;
+      importModel: () => Promise<{ success: boolean; filename?: string; error?: string } | null>;
       listEngines: () => Promise<{ id: 'cpu' | 'vulkan'; label: string; available: boolean }[]>;
       transcribe: (
         audioPath: string,
         prompt: string,
-        modelFilename: string,
+        modelPath: string,
         engine: 'cpu' | 'vulkan'
       ) => Promise<{ success: boolean; text?: string; error?: string }>;
       saveText: (text: string) => Promise<string | null>;

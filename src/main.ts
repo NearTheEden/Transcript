@@ -33,6 +33,12 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
 
+function userModelsPath(): string {
+  const dir = path.join(app.getPath('userData'), 'models');
+  fs.mkdirSync(dir, { recursive: true });
+  return dir;
+}
+
 // --- Chemins vers les ressources ---
 function resourcePath(...segments: string[]): string {
   // En dev : depuis dist/, on remonte à la racine du projet
@@ -48,8 +54,19 @@ const FFMPEG_PATH = resourcePath('ffmpeg', 'ffmpeg.exe');
 // --- IPC : sélection de fichier via dialogue natif ---
 ipcMain.handle('select-audio-file', async () => {
   const result = await dialog.showOpenDialog({
-    title: 'Sélectionner un fichier audio',
-    filters: [{ name: 'Fichiers audio', extensions: ['m4a', 'mp3', 'wav', 'ogg', 'flac'] }],
+    title: 'Sélectionner un fichier audio ou vidéo',
+    filters: [
+      {
+        name: 'Fichiers audio et vidéo',
+        extensions: [
+          // Audio
+          'm4a', 'mp3', 'wav', 'ogg', 'flac', 'aac', 'wma', 'opus', 'aiff', 'amr',
+          // Vidéo (ffmpeg extrait la piste audio automatiquement)
+          'mp4', 'mov', 'mkv', 'avi', 'webm', 'wmv',
+        ],
+      },
+      { name: 'Tous les fichiers', extensions: ['*'] },
+    ],
     properties: ['openFile'],
   });
   if (result.canceled || result.filePaths.length === 0) return null;
@@ -60,11 +77,10 @@ ipcMain.handle('select-audio-file', async () => {
 ipcMain.handle('transcribe', async (_event, args: {
   audioPath: string;
   prompt: string;
-  modelFilename: string;
+  modelPath: string;
   engine: 'cpu' | 'vulkan';
 }) => {
-  const { audioPath, prompt, modelFilename, engine } = args;
-  const modelPath = resourcePath('models', modelFilename);
+  const { audioPath, prompt, modelPath, engine } = args;
   const whisperDir = engine === 'vulkan' ? 'whisper-vulkan' : 'whisper-cpu';
   const whisperPath = resourcePath(whisperDir, 'whisper-cli.exe');
   const tempWavPath = path.join(os.tmpdir(), `transcript_${Date.now()}.wav`);
@@ -230,20 +246,42 @@ function runProcess(
   });
 }
 
-// --- IPC : liste des modèles disponibles ---
 ipcMain.handle('list-models', async () => {
-  const modelsDir = resourcePath('models');
+  const results: { filename: string; label: string; source: 'builtin' | 'user'; path: string }[] = [];
+
+  // 1. Modèles packagés (lecture seule)
+  const builtinDir = resourcePath('models');
   try {
-    const files = await fs.promises.readdir(modelsDir);
-    return files
-      .filter((f) => f.endsWith('.bin'))
-      .map((f) => ({
-        filename: f,
-        label: prettyModelName(f),
-      }));
-  } catch {
-    return [];
-  }
+    const files = await fs.promises.readdir(builtinDir);
+    for (const f of files) {
+      if (f.endsWith('.bin')) {
+        results.push({
+          filename: f,
+          label: prettyModelName(f),
+          source: 'builtin',
+          path: path.join(builtinDir, f),
+        });
+      }
+    }
+  } catch { /* dossier vide ou absent, ignoré */ }
+
+  // 2. Modèles utilisateur
+  const userDir = userModelsPath();
+  try {
+    const files = await fs.promises.readdir(userDir);
+    for (const f of files) {
+      if (f.endsWith('.bin')) {
+        results.push({
+          filename: f,
+          label: prettyModelName(f) + ' (personnalisé)',
+          source: 'user',
+          path: path.join(userDir, f),
+        });
+      }
+    }
+  } catch { /* pas grave */ }
+
+  return results;
 });
 
 // --- IPC : liste des moteurs disponibles ---
@@ -261,6 +299,36 @@ ipcMain.handle('list-engines', async () => {
     },
   ];
   return engines;
+});
+
+ipcMain.handle('import-model', async () => {
+  const result = await dialog.showOpenDialog({
+    title: 'Sélectionner un modèle Whisper (.bin)',
+    filters: [{ name: 'Modèles Whisper', extensions: ['bin'] }],
+    properties: ['openFile'],
+  });
+  if (result.canceled || result.filePaths.length === 0) return null;
+
+  const sourcePath = result.filePaths[0];
+  const fileName = path.basename(sourcePath);
+  const destPath = path.join(userModelsPath(), fileName);
+
+  // Vérifier qu'on n'écrase pas un modèle existant
+  if (fs.existsSync(destPath)) {
+    return { success: false, error: `Un modèle nommé "${fileName}" existe déjà.` };
+  }
+
+  // Copier (peut prendre du temps sur des fichiers de plusieurs Go, on stream)
+  await new Promise<void>((resolve, reject) => {
+    const rd = fs.createReadStream(sourcePath);
+    const wr = fs.createWriteStream(destPath);
+    rd.on('error', reject);
+    wr.on('error', reject);
+    wr.on('close', () => resolve());
+    rd.pipe(wr);
+  });
+
+  return { success: true, filename: fileName };
 });
 
 function prettyModelName(filename: string): string {

@@ -144,6 +144,61 @@
       color: #64748b;
       margin: 6px 0 0;
     }
+
+    .model-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .model-row button {
+      padding: 10px 14px;
+      font-size: 16px;
+    }
+
+    code {
+      background: #eef2f7;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Consolas', monospace;
+      font-size: 12px;
+    }
+
+    a {
+      color: #2563eb;
+    }
+
+    .progress-bar-container {
+      width: 100%;
+      height: 8px;
+      background: #e2e8f0;
+      border-radius: 4px;
+      margin-top: 10px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #3b82f6, #60a5fa);
+      border-radius: 4px;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .progress-bar.indeterminate {
+      width: 30% !important;
+      animation: indeterminate 1.5s infinite linear;
+    }
+
+    @keyframes indeterminate {
+      0% {
+        transform: translateX(-100%);
+      }
+
+      100% {
+        transform: translateX(400%);
+      }
+    }
   </style>
 </head>
 
@@ -154,7 +209,10 @@
     <div class="card">
       <label>1. Fichier audio</label>
       <div id="drop-zone" class="drop-zone">
-        <p>Glissez-déposez votre fichier .m4a ici</p>
+        <p>Glissez-déposez un fichier audio ou vidéo ici</p>
+        <p style="font-size: 11px; color: #94a3b8; margin-top: 4px;">
+          Formats supportés : m4a, mp3, wav, ogg, flac, mp4, mov, mkv…
+        </p>
         <p style="font-size: 13px;">— ou —</p>
         <button id="select-button" class="secondary">Parcourir…</button>
       </div>
@@ -173,13 +231,21 @@
 
     <div class="card">
       <label for="model-select">3. Modèle de transcription</label>
-      <select id="model-select">
-        <option value="">Chargement…</option>
-      </select>
+      <div class="model-row">
+        <select id="model-select" style="flex: 1;">
+          <option value="">Chargement…</option>
+        </select>
+        <button id="import-model-button" class="secondary" title="Importer un modèle .bin">➕</button>
+      </div>
       <p class="hint">
         <strong>small</strong> : rapide, qualité correcte •
         <strong>medium</strong> : plus lent, meilleure qualité •
         <strong>large</strong> : le plus précis (très lent sans GPU)
+      </p>
+      <p class="hint">
+        Pour ajouter un modèle, télécharge un fichier <code>.bin</code> depuis
+        <a href="https://huggingface.co/ggerganov/whisper.cpp/tree/main" target="_blank">huggingface.co</a>
+        et clique sur ➕.
       </p>
     </div>
 
@@ -200,6 +266,9 @@
 
     <div id="progress-area" class="card hidden">
       <div class="progress" id="progress-message">En attente…</div>
+      <div class="progress-bar-container">
+        <div class="progress-bar" id="progress-bar"></div>
+      </div>
     </div>
 
     <div id="result-area" class="card hidden">
