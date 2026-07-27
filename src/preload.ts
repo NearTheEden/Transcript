@@ -13,6 +13,9 @@ contextBridge.exposeInMainWorld('transcripteurAPI', {
   saveText: (text: string): Promise<string | null> =>
     ipcRenderer.invoke('save-text', text),
 
+  saveDocx: (text: string, sourceFileName: string): Promise<string | null> =>
+    ipcRenderer.invoke('save-docx', { text, sourceFileName }),
+
   onProgress: (callback: (message: string) => void) => {
     ipcRenderer.on('transcription-progress', (_event, message) => callback(message));
   },

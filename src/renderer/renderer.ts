@@ -12,6 +12,7 @@ const progressMessage = document.getElementById('progress-message') as HTMLDivEl
 const resultArea = document.getElementById('result-area') as HTMLDivElement;
 const resultText = document.getElementById('result-text') as HTMLTextAreaElement;
 const saveButton = document.getElementById('save-button') as HTMLButtonElement;
+const saveDocxButton = document.getElementById('save-docx-button') as HTMLButtonElement;
 const modelSelect = document.getElementById('model-select') as HTMLSelectElement;
 
 let selectedFilePath: string | null = null;
@@ -107,4 +108,12 @@ transcribeButton.addEventListener('click', async () => {
 saveButton.addEventListener('click', async () => {
   const filePath = await window.transcripteurAPI.saveText(resultText.value);
   if (filePath) alert(`Transcription enregistrée dans :\n${filePath}`);
+});
+
+saveDocxButton.addEventListener('click', async () => {
+  const sourceFileName = selectedFilePath
+    ? selectedFilePath.split(/[\\/]/).pop() ?? 'audio'
+    : 'audio';
+  const filePath = await window.transcripteurAPI.saveDocx(resultText.value, sourceFileName);
+  if (filePath) alert(`Document Word enregistré dans :\n${filePath}`);
 });

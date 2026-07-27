@@ -1,10 +1,14 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
   <meta charset="UTF-8" />
   <title>Transcript</title>
   <style>
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       font-family: 'Segoe UI', -apple-system, sans-serif;
       background: #f4f6f8;
@@ -12,15 +16,26 @@
       margin: 0;
       padding: 24px;
     }
-    .container { max-width: 820px; margin: 0 auto; }
-    h1 { font-size: 22px; margin: 0 0 20px; color: #0f172a; }
+
+    .container {
+      max-width: 820px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 22px;
+      margin: 0 0 20px;
+      color: #0f172a;
+    }
+
     .card {
       background: white;
       border-radius: 10px;
       padding: 18px;
       margin-bottom: 14px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     }
+
     .drop-zone {
       border: 2px dashed #cbd5e1;
       border-radius: 8px;
@@ -29,41 +44,109 @@
       color: #64748b;
       transition: all 0.2s;
     }
+
     .drop-zone.dragging {
       border-color: #3b82f6;
       background: #eff6ff;
       color: #1e40af;
     }
-    .drop-zone p { margin: 6px 0; }
+
+    .drop-zone p {
+      margin: 6px 0;
+    }
+
     button {
-      background: #3b82f6; color: white; border: none;
-      padding: 10px 18px; border-radius: 6px;
-      font-size: 14px; cursor: pointer;
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
     }
-    button:hover:not(:disabled) { background: #2563eb; }
-    button:disabled { background: #cbd5e1; cursor: not-allowed; }
-    button.secondary { background: #e2e8f0; color: #1e293b; }
-    button.secondary:hover:not(:disabled) { background: #cbd5e1; }
-    label { display: block; font-weight: 600; margin-bottom: 8px; color: #334155; }
+
+    button:hover:not(:disabled) {
+      background: #2563eb;
+    }
+
+    button:disabled {
+      background: #cbd5e1;
+      cursor: not-allowed;
+    }
+
+    button.secondary {
+      background: #e2e8f0;
+      color: #1e293b;
+    }
+
+    button.secondary:hover:not(:disabled) {
+      background: #cbd5e1;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #334155;
+    }
+
     textarea {
-      width: 100%; padding: 10px;
-      border: 1px solid #cbd5e1; border-radius: 6px;
-      font-family: inherit; font-size: 14px; resize: vertical;
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 14px;
+      resize: vertical;
     }
+
     select {
-    width: 100%; padding: 10px;
-    border: 1px solid #cbd5e1; border-radius: 6px;
-    font-family: inherit; font-size: 14px; background: white;
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 14px;
+      background: white;
     }
-    #prompt-input { min-height: 70px; }
-    #result-text { min-height: 280px; }
-    #file-name { color: #475569; font-style: italic; }
-    .row { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
-    .progress { color: #1e40af; font-weight: 500; }
-    .hidden { display: none; }
-    .hint { font-size: 12px; color: #64748b; margin: 6px 0 0; }
+
+    #prompt-input {
+      min-height: 70px;
+    }
+
+    #result-text {
+      min-height: 280px;
+    }
+
+    #file-name {
+      color: #475569;
+      font-style: italic;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .progress {
+      color: #1e40af;
+      font-weight: 500;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .hint {
+      font-size: 12px;
+      color: #64748b;
+      margin: 6px 0 0;
+    }
   </style>
 </head>
+
 <body>
   <div class="container">
     <h1>Transcripteur de réunions</h1>
@@ -83,21 +166,22 @@
 
     <div class="card">
       <label for="prompt-input">2. Vocabulaire spécifique (optionnel)</label>
-      <textarea id="prompt-input" placeholder="Ex. : Paracétamol, dyspnée, endoscopie, Dr Dupont, service de cardiologie…"></textarea>
+      <textarea id="prompt-input"
+        placeholder="Ex. : Paracétamol, dyspnée, endoscopie, Dr Dupont, service de cardiologie…"></textarea>
       <p class="hint">Ces termes aident Whisper à mieux reconnaître le vocabulaire médical.</p>
     </div>
 
     <div class="card">
-        <label for="model-select">3. Modèle de transcription</label>
-        <select id="model-select">
-          <option value="">Chargement…</option>
-        </select>
-        <p class="hint">
-          <strong>small</strong> : rapide, qualité correcte •
-          <strong>medium</strong> : plus lent, meilleure qualité •
-          <strong>large</strong> : le plus précis (très lent sans GPU)
-        </p>
-      </div>
+      <label for="model-select">3. Modèle de transcription</label>
+      <select id="model-select">
+        <option value="">Chargement…</option>
+      </select>
+      <p class="hint">
+        <strong>small</strong> : rapide, qualité correcte •
+        <strong>medium</strong> : plus lent, meilleure qualité •
+        <strong>large</strong> : le plus précis (très lent sans GPU)
+      </p>
+    </div>
 
     <div class="card">
       <button id="transcribe-button" disabled>Lancer la transcription</button>
@@ -111,11 +195,13 @@
       <label>Résultat</label>
       <textarea id="result-text"></textarea>
       <div class="row">
-        <button id="save-button">Enregistrer sous…</button>
+        <button id="save-button">Enregistrer en .txt</button>
+        <button id="save-docx-button">Enregistrer en .docx</button>
       </div>
     </div>
   </div>
 
   <script src="./renderer.js"></script>
 </body>
+
 </html>
