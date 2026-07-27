@@ -1,21 +1,21 @@
 # Transcript
 
-Application Windows pour transcrire automatiquement des enregistrements audio (réunions, mémos, etc.) en texte, en local et sans envoyer les données sur internet.
+Windows application for automatically transcribing audio recordings (meetings, voice memos, etc.) into text, entirely offline and without sending any data over the internet.
 
-Construite avec Electron + TypeScript, utilise [whisper.cpp](https://github.com/ggml-org/whisper.cpp) comme moteur de reconnaissance vocale et [ffmpeg](https://ffmpeg.org/) pour la conversion audio.
+Built with Electron + TypeScript, it uses [whisper.cpp](https://github.com/ggml-org/whisper.cpp) as the speech recognition engine and [FFmpeg](https://ffmpeg.org/) for audio conversion.
 
-## Fonctionnalités
+## Features
 
-- Interface simple : glisser-déposer un fichier `.m4a` (ou `.mp3`, `.wav`, `.ogg`, `.flac`)
-- Transcription 100 % locale (aucune donnée envoyée en ligne)
-- Choix du modèle (small / medium / large) selon vitesse vs précision
-- Champ "vocabulaire spécifique" pour biaiser le modèle (utile pour jargon médical, technique…)
-- Export en fichier texte
-- Français par défaut
+- Simple drag-and-drop interface for `.m4a` files (also supports `.mp3`, `.wav`, `.ogg`, and `.flac`)
+- 100% offline transcription (no data is sent online)
+- Model selection (small / medium / large) to balance speed and accuracy
+- "Custom vocabulary" field to bias the model (useful for medical, technical, or domain-specific terminology)
+- Export transcripts as text files
+- French language by default
 
-## Prérequis pour compiler
+## Build Requirements
 
-- [Node.js 22 LTS](https://nodejs.org/) ou plus récent
+- [Node.js 22 LTS](https://nodejs.org/) or later
 - Windows 10 / 11
 
 ## Installation
@@ -26,17 +26,17 @@ cd Transcript
 npm install
 ```
 
-### Télécharger les ressources externes
+### Download External Resources
 
-Ces fichiers ne sont pas versionnés (trop volumineux / non redistribuables). À placer manuellement :
+These files are not included in the repository (they are too large and/or cannot be redistributed). They must be downloaded and placed manually:
 
-1. **ffmpeg** — Télécharger depuis [gyan.dev](https://www.gyan.dev/ffmpeg/builds/) (release essentials), extraire, copier `ffmpeg.exe` dans `resources/ffmpeg/`.
+1. **FFmpeg** — Download the Essentials release from [gyan.dev](https://www.gyan.dev/ffmpeg/builds/), extract it, and copy `ffmpeg.exe` to `resources/ffmpeg/`.
 
-2. **whisper.cpp** — Télécharger la dernière release Windows x64 depuis [github.com/ggml-org/whisper.cpp/releases](https://github.com/ggml-org/whisper.cpp/releases), extraire tout le contenu dans `resources/whisper/` (garder toutes les DLL).
+2. **whisper.cpp** — Download the latest Windows x64 release from [github.com/ggml-org/whisper.cpp/releases](https://github.com/ggml-org/whisper.cpp/releases), extract all files into `resources/whisper/` (keep all DLL files).
 
-3. **Modèles** — Télécharger un ou plusieurs modèles depuis [huggingface.co/ggerganov/whisper.cpp](https://huggingface.co/ggerganov/whisper.cpp/tree/main) et les placer dans `resources/models/`. Recommandé : `ggml-medium-q5_0.bin`.
+3. **Models** — Download one or more models from [huggingface.co/ggerganov/whisper.cpp](https://huggingface.co/ggerganov/whisper.cpp/tree/main) and place them in `resources/models/`. Recommended: `ggml-medium-q5_0.bin`.
 
-Arborescence attendue :
+Expected directory structure:
 
 ```
 resources/
@@ -49,19 +49,22 @@ resources/
     └── ggml-medium-q5_0.bin
 ```
 
-## Utilisation
+## Usage
 
-**Mode développement** :
+**Development mode**:
+
 ```powershell
 npm start
 ```
 
-**Construire un installeur Windows** :
+**Build a Windows installer**:
+
 ```powershell
 npm run dist
 ```
-L'installeur `.exe` sera généré dans `release/`.
 
-## Licence
+The `.exe` installer will be generated in the `release/` directory.
+
+## License
 
 MIT
