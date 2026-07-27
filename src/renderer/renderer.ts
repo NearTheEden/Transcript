@@ -14,6 +14,7 @@ const resultText = document.getElementById('result-text') as HTMLTextAreaElement
 const saveButton = document.getElementById('save-button') as HTMLButtonElement;
 const saveDocxButton = document.getElementById('save-docx-button') as HTMLButtonElement;
 const modelSelect = document.getElementById('model-select') as HTMLSelectElement;
+const engineSelect = document.getElementById('engine-select') as HTMLSelectElement;
 
 let selectedFilePath: string | null = null;
 
@@ -36,6 +37,27 @@ async function loadModels() {
   modelSelect.selectedIndex = mediumIdx >= 0 ? mediumIdx : 0;
 }
 loadModels();
+
+// Charger la liste des moteurs disponibles
+async function loadEngines() {
+  const engines = await window.transcripteurAPI.listEngines();
+  engineSelect.innerHTML = '';
+  const availableEngines = engines.filter((e) => e.available);
+  if (availableEngines.length === 0) {
+    engineSelect.innerHTML = '<option value="">Aucun moteur trouvé</option>';
+    return;
+  }
+  for (const engine of availableEngines) {
+    const opt = document.createElement('option');
+    opt.value = engine.id;
+    opt.textContent = engine.label;
+    engineSelect.appendChild(opt);
+  }
+  // CPU par défaut (compatible partout, sûr)
+  const cpuIdx = availableEngines.findIndex((e) => e.id === 'cpu');
+  engineSelect.selectedIndex = cpuIdx >= 0 ? cpuIdx : 0;
+}
+loadEngines();
 
 function updateFileDisplay(filePath: string | null) {
   selectedFilePath = filePath;
@@ -90,7 +112,8 @@ transcribeButton.addEventListener('click', async () => {
   const result = await window.transcripteurAPI.transcribe(
     selectedFilePath,
     promptInput.value,
-    modelSelect.value
+    modelSelect.value,
+    engineSelect.value as 'cpu' | 'vulkan'
   );
 
   transcribeButton.disabled = false;

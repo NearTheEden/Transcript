@@ -7,8 +7,11 @@ contextBridge.exposeInMainWorld('transcripteurAPI', {
   listModels: (): Promise<{ filename: string; label: string }[]> =>
     ipcRenderer.invoke('list-models'),
 
-  transcribe: (audioPath: string, prompt: string, modelFilename: string) =>
-    ipcRenderer.invoke('transcribe', { audioPath, prompt, modelFilename }),
+  listEngines: (): Promise<{ id: 'cpu' | 'vulkan'; label: string; available: boolean }[]> =>
+    ipcRenderer.invoke('list-engines'),
+
+  transcribe: (audioPath: string, prompt: string, modelFilename: string, engine: 'cpu' | 'vulkan') =>
+    ipcRenderer.invoke('transcribe', { audioPath, prompt, modelFilename, engine }),
 
   saveText: (text: string): Promise<string | null> =>
     ipcRenderer.invoke('save-text', text),

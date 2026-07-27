@@ -44,7 +44,6 @@ function resourcePath(...segments: string[]): string {
 }
 
 const FFMPEG_PATH = resourcePath('ffmpeg', 'ffmpeg.exe');
-const WHISPER_PATH = resourcePath('whisper', 'whisper-cli.exe');
 
 // --- IPC : sélection de fichier via dialogue natif ---
 ipcMain.handle('select-audio-file', async () => {
@@ -58,9 +57,16 @@ ipcMain.handle('select-audio-file', async () => {
 });
 
 // --- IPC : transcription complète ---
-ipcMain.handle('transcribe', async (_event, args: { audioPath: string; prompt: string; modelFilename: string }) => {
-  const { audioPath, prompt, modelFilename } = args;
+ipcMain.handle('transcribe', async (_event, args: {
+  audioPath: string;
+  prompt: string;
+  modelFilename: string;
+  engine: 'cpu' | 'vulkan';
+}) => {
+  const { audioPath, prompt, modelFilename, engine } = args;
   const modelPath = resourcePath('models', modelFilename);
+  const whisperDir = engine === 'vulkan' ? 'whisper-vulkan' : 'whisper-cpu';
+  const whisperPath = resourcePath(whisperDir, 'whisper-cli.exe');
   const tempWavPath = path.join(os.tmpdir(), `transcript_${Date.now()}.wav`);
 
   const sendProgress = (message: string) => {
@@ -80,7 +86,7 @@ ipcMain.handle('transcribe', async (_event, args: { audioPath: string; prompt: s
     ]);
 
     // 2. Transcription
-    sendProgress('Démarrage de la transcription…');
+    sendProgress(`Démarrage de la transcription (moteur : ${engine.toUpperCase()})…`);
     const whisperArgs = [
       '-m', modelPath,
       '-f', tempWavPath,
@@ -91,24 +97,14 @@ ipcMain.handle('transcribe', async (_event, args: { audioPath: string; prompt: s
       whisperArgs.push('--prompt', prompt.trim());
     }
 
-    await runProcess(WHISPER_PATH, whisperArgs, (chunk) => {
-      // Whisper.cpp affiche parfois une progression en %
+    await runProcess(whisperPath, whisperArgs, (chunk) => {
       const match = chunk.match(/(\d+)%/);
       if (match) sendProgress(`Transcription : ${match[1]}%`);
     });
 
     // 3. Lire le résultat
     const txtPath = tempWavPath + '.txt';
-    console.log('🔍 [main] Chemin attendu:', txtPath);
-    console.log('🔍 [main] Existe ?', fs.existsSync(txtPath));
-
-    // Bonus : lister le contenu du dossier temp pour voir ce que whisper a vraiment créé
-    const tempDir = path.dirname(tempWavPath);
-    const tempFiles = fs.readdirSync(tempDir).filter(f => f.startsWith('transcript_'));
-    console.log('🔍 [main] Fichiers transcript_* dans temp:', tempFiles);
-
     const text = await fs.promises.readFile(txtPath, 'utf-8');
-    console.log('🔍 [main] Texte lu, longueur:', text.length);
 
     // 4. Nettoyage
     fs.promises.unlink(tempWavPath).catch(() => { });
@@ -248,6 +244,23 @@ ipcMain.handle('list-models', async () => {
   } catch {
     return [];
   }
+});
+
+// --- IPC : liste des moteurs disponibles ---
+ipcMain.handle('list-engines', async () => {
+  const engines: { id: 'cpu' | 'vulkan'; label: string; available: boolean }[] = [
+    {
+      id: 'cpu',
+      label: 'CPU (compatible partout)',
+      available: fs.existsSync(resourcePath('whisper-cpu', 'whisper-cli.exe')),
+    },
+    {
+      id: 'vulkan',
+      label: 'GPU Vulkan (plus rapide si GPU compatible)',
+      available: fs.existsSync(resourcePath('whisper-vulkan', 'whisper-cli.exe')),
+    },
+  ];
+  return engines;
 });
 
 function prettyModelName(filename: string): string {

@@ -33,15 +33,30 @@ jobs:
           New-Item -ItemType Directory -Force -Path "resources/ffmpeg"
           Copy-Item $ffmpegExe.FullName -Destination "resources/ffmpeg/ffmpeg.exe"
 
-      - name: Download whisper.cpp
+      - name: Download whisper.cpp (CPU build)
         run: |
           $releases = Invoke-RestMethod -Uri "https://api.github.com/repos/ggml-org/whisper.cpp/releases/latest"
-          $asset = $releases.assets | Where-Object { $_.name -match "whisper-bin-x64\.zip$" } | Select-Object -First 1
+          $asset = $releases.assets | Where-Object { $_.name -match "^whisper-bin-x64\.zip$" } | Select-Object -First 1
           if (-not $asset) { throw "Asset whisper-bin-x64.zip introuvable" }
-          Invoke-WebRequest -Uri $asset.browser_download_url -OutFile "whisper.zip"
-          Expand-Archive -Path "whisper.zip" -DestinationPath "whisper-extract"
-          New-Item -ItemType Directory -Force -Path "resources/whisper"
-          Get-ChildItem -Path "whisper-extract" -Recurse -File | Copy-Item -Destination "resources/whisper/" -Force
+          Write-Host "CPU build: $($asset.name)"
+          Invoke-WebRequest -Uri $asset.browser_download_url -OutFile "whisper-cpu.zip"
+          Expand-Archive -Path "whisper-cpu.zip" -DestinationPath "whisper-cpu-extract"
+          New-Item -ItemType Directory -Force -Path "resources/whisper-cpu"
+          Get-ChildItem -Path "whisper-cpu-extract" -Recurse -File | Copy-Item -Destination "resources/whisper-cpu/" -Force
+
+      - name: Download whisper.cpp (Vulkan build)
+        run: |
+          $releases = Invoke-RestMethod -Uri "https://api.github.com/repos/ggml-org/whisper.cpp/releases/latest"
+          $asset = $releases.assets | Where-Object { $_.name -match "whisper-vulkan-bin-x64\.zip$" } | Select-Object -First 1
+          if (-not $asset) {
+            Write-Host "⚠️ Build Vulkan indisponible dans cette release"
+          } else {
+            Write-Host "Vulkan build: $($asset.name)"
+            Invoke-WebRequest -Uri $asset.browser_download_url -OutFile "whisper-vulkan.zip"
+            Expand-Archive -Path "whisper-vulkan.zip" -DestinationPath "whisper-vulkan-extract"
+            New-Item -ItemType Directory -Force -Path "resources/whisper-vulkan"
+            Get-ChildItem -Path "whisper-vulkan-extract" -Recurse -File | Copy-Item -Destination "resources/whisper-vulkan/" -Force
+          }
 
       - name: Download Whisper models
         run: |
