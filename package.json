@@ -20,34 +20,41 @@
     "typescript": "^7.0.2"
   },
   "build": {
-  "appId": "be.transcript.app",
-  "productName": "Transcript",
-  "directories": {
-    "output": "release",
-    "buildResources": "resources"
-  },
-  "files": [
-    "dist/**/*",
-    "package.json"
-  ],
-  "extraResources": [
-    {
-      "from": "resources",
-      "to": ".",
-      "filter": ["**/*"]
+    "appId": "be.transcript.app",
+    "productName": "Transcript",
+    "directories": {
+      "output": "release",
+      "buildResources": "resources"
+    },
+    "files": [
+      "dist/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "resources",
+        "to": ".",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "resources/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Transcript"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "NearTheEden",
+      "repo": "Transcript"
     }
-  ],
-  "win": {
-    "target": "nsis",
-    "icon": "resources/icon.ico"
-  },
-  "nsis": {
-    "oneClick": false,
-    "perMachine": true,
-    "allowToChangeInstallationDirectory": true,
-    "createDesktopShortcut": true,
-    "createStartMenuShortcut": true,
-    "shortcutName": "Transcript"
   }
-}
 }
