@@ -49,6 +49,9 @@ jobs:
           Invoke-WebRequest -Uri "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small-q5_1.bin" -OutFile "resources/models/ggml-small-q5_1.bin"
           Invoke-WebRequest -Uri "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-medium-q5_0.bin" -OutFile "resources/models/ggml-medium-q5_0.bin"
 
+      - name: Compile TypeScript
+        run: npm run build
+
       - name: Build and publish
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
