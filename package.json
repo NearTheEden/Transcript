@@ -9,7 +9,7 @@
     "build:renderer": "tsc -p tsconfig.renderer.json",
     "build": "npm run build:main && npm run build:renderer && node scripts/copy-html.js",
     "start": "npm run build && electron .",
-    "dist": "npm run build && electron-builder"
+    "dist": "npm run build && electron-builder --publish never"
   },
   "keywords": [],
   "license": "ISC",
@@ -49,7 +49,8 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Transcript"
+      "shortcutName": "Transcript",
+      "artifactName": "${productName}-Setup-${version}.${ext}"
     },
     "publish": {
       "provider": "github",
